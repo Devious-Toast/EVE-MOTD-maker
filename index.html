@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101820">
+  <title>EVE Online MOTD Maker</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, "Segoe UI", sans-serif;
+      background: #101820;
+      color: #e6edf3;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at top, #1b2c38, #101820 55%);
+    }
+
+    header, main { width: min(1120px, calc(100% - 32px)); margin: auto; }
+    header { padding: 32px 0 24px; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 4vw, 2.2rem); }
+    header p { margin: 0; color: #9eafbc; }
+    main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; padding-bottom: 32px; }
+    .panel {
+      min-width: 0;
+      padding: 20px;
+      border: 1px solid #31434f;
+      border-radius: 10px;
+      background: #17232c;
+      box-shadow: 0 12px 32px #0003;
+    }
+    .panel h2 { margin: 0 0 16px; font-size: 1.1rem; }
+    label { display: block; margin: 14px 0 7px; color: #c6d2dc; font-size: .9rem; }
+    input, textarea, .editor, .output {
+      width: 100%;
+      border: 1px solid #405462;
+      border-radius: 6px;
+      background: #0e171d;
+      color: #e6edf3;
+      font: inherit;
+    }
+    input { padding: 10px 12px; }
+    .editor {
+      min-height: 230px;
+      padding: 12px;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
+    .editor:focus, input:focus, textarea:focus { outline: 2px solid #62b5ce; outline-offset: 1px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 7px; }
+    button {
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid #405462;
+      border-radius: 6px;
+      background: #23343f;
+      color: #f1f6f9;
+      font: inherit;
+      cursor: pointer;
+    }
+    button:hover { background: #304957; }
+    button.primary { border-color: #53a9c2; background: #17647b; }
+    button.primary:hover { background: #207c97; }
+    .toolbar button { min-width: 40px; padding: 7px 10px; }
+    .toolbar button[aria-label="Bold"] { font-weight: 700; }
+    .toolbar button[aria-label="Italic"] { font-style: italic; }
+    .toolbar button[aria-label="Underline"] { text-decoration: underline; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .preview {
+      min-height: 290px;
+      width: 100%;
+      border: 1px solid #405462;
+      border-radius: 6px;
+      background: #fff;
+    }
+    .output { display: block; min-height: 150px; margin-top: 14px; padding: 12px; resize: vertical; font: 13px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .hint { margin: 10px 0 0; color: #9eafbc; font-size: .85rem; }
+    .status { min-height: 1.2em; margin: 9px 0 0; color: #9fe0bd; font-size: .85rem; }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 760px) {
+      main { grid-template-columns: 1fr; }
+      .panel { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>EVE Online MOTD Maker</h1>
+    <p>Compose an in-game message, preview it, and copy the HTML fragment.</p>
+  </header>
+  <main>
+    <section class="panel" aria-labelledby="editor-heading">
+      <h2 id="editor-heading">Build your MOTD</h2>
+      <label for="title">Message title</label>
+      <input id="title" maxlength="120" value="Welcome, capsuleer!" autocomplete="off">
+      <label for="editor">Message body</label>
+      <div class="toolbar" role="toolbar" aria-label="Text formatting">
+        <button type="button" data-command="bold" aria-label="Bold" title="Bold"><b>B</b></button>
+        <button type="button" data-command="italic" aria-label="Italic" title="Italic"><i>I</i></button>
+        <button type="button" data-command="underline" aria-label="Underline" title="Underline"><u>U</u></button>
+        <button type="button" data-command="insertUnorderedList" aria-label="Bulleted list" title="Bulleted list">• List</button>
+        <button type="button" data-command="createLink" aria-label="Insert link" title="Insert link">Link</button>
+        <label for="text-color" class="visually-hidden">Text color</label>
+        <input id="text-color" type="color" value="#55c8e8" title="Text color" aria-label="Text color" style="width:42px;height:38px;padding:3px">
+      </div>
+      <div id="editor" class="editor" contenteditable="true" role="textbox" aria-label="MOTD message body" aria-multiline="true" spellcheck="true">
+        <p>Welcome to the corporation. Fly safe!</p>
+        <p>Check the corporation channels for news and fleet updates.</p>
+      </div>
+      <p class="hint">Select text to format it. Only supported text and link formatting is included in the exported HTML.</p>
+    </section>
+    <section class="panel" aria-labelledby="preview-heading">
+      <h2 id="preview-heading">Preview and HTML</h2>
+      <iframe id="preview" class="preview" title="MOTD preview" sandbox></iframe>
+      <label for="output">HTML fragment</label>
+      <textarea id="output" class="output" readonly spellcheck="false"></textarea>
+      <div class="actions">
+        <button id="copy" class="primary" type="button">Copy HTML</button>
+        <button id="clear" type="button">Clear message</button>
+      </div>
+      <p id="status" class="status" aria-live="polite"></p>
+    </section>
+  </main>
+  <script>
+    const editor = document.querySelector("#editor");
+    const title = document.querySelector("#title");
+    const output = document.querySelector("#output");
+    const preview = document.querySelector("#preview");
+    const status = document.querySelector("#status");
+    const allowedTags = new Set(["A", "B", "BLOCKQUOTE", "BR", "DIV", "EM", "FONT", "H1", "H2", "H3", "HR", "I", "LI", "OL", "P", "SPAN", "STRONG", "U", "UL"]);
+    const allowedColors = /^(#[\da-f]{3,8}|[a-z]{1,20})$/i;
+
+    function safeMarkup(node) {
+      return Array.from(node.childNodes, child => {
+        if (child.nodeType === Node.TEXT_NODE) return escapeHtml(child.textContent);
+        if (child.nodeType !== Node.ELEMENT_NODE) return "";
+        if (!allowedTags.has(child.tagName)) return safeMarkup(child);
+
+        const tag = child.tagName.toLowerCase();
+        let attributes = "";
+        if (tag === "a") {
+          const href = child.getAttribute("href") || "";
+          if (/^(https?:|mailto:)/i.test(href)) attributes = ` href="${escapeAttribute(href)}"`;
+        } else if (tag === "font") {
+          const color = child.getAttribute("color") || "";
+          if (allowedColors.test(color)) attributes = ` color="${escapeAttribute(color)}"`;
+        }
+        return `<${tag}${attributes}>${safeMarkup(child)}</${tag}>`;
+      }).join("");
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+
+    function escapeAttribute(value) {
+      return escapeHtml(value);
+    }
+
+    function update() {
+      const heading = title.value.trim();
+      const headingMarkup = heading
+        ? `<font size="4" color="#55c8e8"><b>${escapeHtml(heading)}</b></font><br><br>`
+        : "";
+      const fragment = `${headingMarkup}${safeMarkup(editor)}`;
+      output.value = fragment;
+      preview.srcdoc = `<!doctype html><html><body style="font:14px Arial,sans-serif;color:#222">${fragment}</body></html>`;
+    }
+
+    document.querySelector(".toolbar").addEventListener("click", event => {
+      const button = event.target.closest("button[data-command]");
+      if (!button) return;
+      editor.focus();
+      if (button.dataset.command === "createLink") {
+        const url = window.prompt("Enter a link URL (https:// or mailto:)");
+        if (url && /^(https?:|mailto:)/i.test(url)) document.execCommand("createLink", false, url);
+      } else {
+        document.execCommand(button.dataset.command, false);
+      }
+      update();
+    });
+
+    document.querySelector("#text-color").addEventListener("input", event => {
+      editor.focus();
+      document.execCommand("foreColor", false, event.target.value);
+      update();
+    });
+    editor.addEventListener("input", update);
+    title.addEventListener("input", update);
+    editor.addEventListener("paste", event => {
+      event.preventDefault();
+      document.execCommand("insertText", false, event.clipboardData.getData("text/plain"));
+    });
+    editor.addEventListener("dragover", event => event.preventDefault());
+    editor.addEventListener("drop", event => {
+      event.preventDefault();
+      document.execCommand("insertText", false, event.dataTransfer.getData("text/plain"));
+    });
+    document.querySelector("#clear").addEventListener("click", () => {
+      title.value = "";
+      editor.replaceChildren();
+      update();
+      status.textContent = "Message cleared.";
+    });
+    document.querySelector("#copy").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(output.value);
+        status.textContent = "HTML copied to clipboard.";
+      } catch {
+        output.focus();
+        output.select();
+        status.textContent = "Clipboard access is unavailable. Select and copy the HTML above.";
+      }
+    });
+
+    update();
+  </script>
+</body>
+</html>
